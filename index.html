@@ -282,16 +282,20 @@
     .stat-num { font-size: 26px; font-weight: 950; line-height: 1; }
     .stat-name { margin-top: 6px; color: var(--muted); font-size: 12px; font-weight: 900; }
 
-    .filters {
+    .filters, .chart-controls, .stage-manager-row {
       display: grid;
       grid-template-columns: 1.4fr 0.9fr 0.9fr;
       gap: 10px;
       margin-bottom: 16px;
     }
 
+    .chart-controls {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
     .records { display: grid; gap: 12px; }
 
-    .record {
+    .record, .insight-card, .stage-card {
       background: rgba(255,255,255,0.82);
       border: 1px solid var(--line);
       border-radius: 22px;
@@ -299,7 +303,7 @@
       box-shadow: var(--soft-shadow);
     }
 
-    .record-head {
+    .record-head, .stage-head {
       display: flex;
       justify-content: space-between;
       gap: 10px;
@@ -333,7 +337,7 @@
     .mid { background: #fef3c7; color: #92400e; }
     .low { background: #fee2e2; color: #991b1b; }
 
-    .record-text {
+    .record-text, .insight-text {
       margin: 8px 0 0;
       white-space: pre-wrap;
       color: #344054;
@@ -342,8 +346,8 @@
 
     .record-text strong { color: #111827; }
 
-    .record-actions { display: flex; gap: 8px; margin-top: 13px; }
-    .record-actions .btn { min-height: 34px; padding: 8px 11px; border-radius: 12px; font-size: 13px; }
+    .record-actions, .stage-actions { display: flex; gap: 8px; margin-top: 13px; flex-wrap: wrap; }
+    .record-actions .btn, .stage-actions .btn { min-height: 34px; padding: 8px 11px; border-radius: 12px; font-size: 13px; }
 
     .empty {
       text-align: center;
@@ -370,7 +374,7 @@
 
     .stage-row {
       display: grid;
-      grid-template-columns: 72px 1fr 54px;
+      grid-template-columns: 84px 1fr 54px;
       gap: 10px;
       align-items: center;
       color: #344054;
@@ -410,17 +414,19 @@
       .layout { grid-template-columns: 1fr; }
       .form-panel { position: static; }
       .stats { grid-template-columns: repeat(2, 1fr); }
-      .filters { grid-template-columns: 1fr; }
+      .filters, .chart-controls, .stage-manager-row { grid-template-columns: 1fr; }
       .tools { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (max-width: 520px) {
       .panel-inner, .content { padding: 16px; }
       .score-grid { grid-template-columns: 1fr; }
-      .record-head { flex-direction: column; }
+      .record-head, .stage-head { flex-direction: column; }
       .badges { justify-content: flex-start; }
-      .topbar { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(14px); }
+      .topbar { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(14px); overflow-x: auto; }
+      .tab { min-width: 74px; }
       .tools { grid-template-columns: 1fr; }
+      .stage-row { grid-template-columns: 76px 1fr 44px; }
     }
   </style>
 </head>
@@ -473,16 +479,7 @@
 
             <div class="field">
               <label for="stage">阶段</label>
-              <select id="stage" required>
-                <option value="平稳期">平稳期</option>
-                <option value="上升期">上升期</option>
-                <option value="稳定期">稳定期</option>
-                <option value="高位期">高位期</option>
-                <option value="巅峰期">巅峰期</option>
-                <option value="失衡期">失衡期</option>
-                <option value="崩溃期">崩溃期</option>
-                <option value="修复期">修复期</option>
-              </select>
+              <select id="stage" required></select>
             </div>
 
             <div class="score-grid">
@@ -521,7 +518,7 @@
           <button class="btn btn-light" onclick="exportCSV()">导出 CSV</button>
           <label class="btn btn-light" for="csvInput">导入 CSV</label>
           <input id="csvInput" type="file" accept=".csv,text/csv" onchange="importCSV(event)" />
-          <button class="btn btn-green" onclick="loadCloudRecords()">刷新同步</button>
+          <button class="btn btn-danger" onclick="clearAllData()">清空数据</button>
         </div>
       </section>
 
@@ -529,6 +526,8 @@
         <div class="topbar">
           <button class="tab active" data-tab="records" onclick="switchTab('records')">记录</button>
           <button class="tab" data-tab="chart" onclick="switchTab('chart')">趋势</button>
+          <button class="tab" data-tab="insights" onclick="switchTab('insights')">感悟</button>
+          <button class="tab" data-tab="stages" onclick="switchTab('stages')">阶段</button>
         </div>
 
         <div class="content">
@@ -537,17 +536,7 @@
           <div id="recordsPanel">
             <div class="filters">
               <input id="searchInput" type="search" placeholder="搜索简记 / 感悟" oninput="render()" />
-              <select id="stageFilter" onchange="render()">
-                <option value="全部">全部阶段</option>
-                <option value="平稳期">平稳期</option>
-                <option value="上升期">上升期</option>
-                <option value="稳定期">稳定期</option>
-                <option value="高位期">高位期</option>
-                <option value="巅峰期">巅峰期</option>
-                <option value="失衡期">失衡期</option>
-                <option value="崩溃期">崩溃期</option>
-                <option value="修复期">修复期</option>
-              </select>
+              <select id="stageFilter" onchange="render()"></select>
               <select id="sortOrder" onchange="render()">
                 <option value="desc">新到旧</option>
                 <option value="asc">旧到新</option>
@@ -557,6 +546,18 @@
           </div>
 
           <div id="chartPanel" style="display:none;">
+            <div class="chart-controls">
+              <select id="chartRange" onchange="onChartRangeChange()">
+                <option value="30">最近 30 天</option>
+                <option value="90" selected>最近 90 天</option>
+                <option value="180">最近 180 天</option>
+                <option value="365">最近 1 年</option>
+                <option value="all">全部</option>
+                <option value="custom">自定义区间</option>
+              </select>
+              <input id="chartStart" type="date" onchange="render()" disabled />
+              <input id="chartEnd" type="date" onchange="render()" disabled />
+            </div>
             <div class="chart-card">
               <h3>分数趋势</h3>
               <canvas id="scoreChart" width="900" height="340"></canvas>
@@ -565,6 +566,26 @@
               <h3>阶段分布</h3>
               <div class="stage-list" id="stageList"></div>
             </div>
+          </div>
+
+          <div id="insightsPanel" style="display:none;">
+            <div class="filters" style="grid-template-columns: 1fr 0.8fr;">
+              <input id="insightSearch" type="search" placeholder="搜索感悟" oninput="render()" />
+              <select id="insightSort" onchange="render()">
+                <option value="desc">新到旧</option>
+                <option value="asc">旧到新</option>
+              </select>
+            </div>
+            <div class="records" id="insights"></div>
+          </div>
+
+          <div id="stagesPanel" style="display:none;">
+            <div class="stage-manager-row">
+              <input id="newStageName" type="text" maxlength="20" placeholder="新增阶段，例如：平台期" />
+              <button class="btn btn-primary" onclick="addStage()">新增阶段</button>
+              <button class="btn btn-light" onclick="resetDefaultStages()">补回默认阶段</button>
+            </div>
+            <div class="records" id="stageManager"></div>
           </div>
         </div>
       </section>
@@ -578,8 +599,12 @@
     const SUPABASE_KEY = "sb_publishable_rZ8DgfiRpYH5ZqLwghO7Bg_aMHk-KvX";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const stages = ["平稳期", "上升期", "稳定期", "高位期", "巅峰期", "失衡期", "崩溃期", "修复期"];
+    const DEFAULT_STAGES = ["平稳期", "上升期", "稳定期", "高位期", "巅峰期", "失衡期", "崩溃期", "修复期"];
+    const CHART_MIN_SCORE = 30;
+    const CHART_MAX_SCORE = 100;
+
     let records = [];
+    let stageOptions = [];
     let editingDate = null;
     let activeTab = "records";
     let currentUser = null;
@@ -618,7 +643,7 @@
       currentUser = data.session?.user || null;
       if (currentUser) {
         showMainView();
-        await loadCloudRecords();
+        await loadAllCloudData();
       } else {
         showAuthView();
       }
@@ -627,9 +652,10 @@
         currentUser = session?.user || null;
         if (currentUser) {
           showMainView();
-          await loadCloudRecords();
+          await loadAllCloudData();
         } else {
           records = [];
+          stageOptions = [];
           render();
           showAuthView();
         }
@@ -686,11 +712,22 @@
       return Number(record.outerScore) === 0 && Number(record.innerScore) === 0 && Number(record.finalScore) === 0;
     }
 
+    function activeStageNames() {
+      const names = stageOptions.map(s => s.name);
+      return names.length ? names : DEFAULT_STAGES;
+    }
+
+    function allStageNamesForDisplay() {
+      const names = new Set(activeStageNames());
+      records.forEach(r => { if (r.stage) names.add(r.stage); });
+      return Array.from(names);
+    }
+
     function normalizeRecord(record) {
-      const stage = stages.includes(record.stage) ? record.stage : "平稳期";
+      const fallbackStage = activeStageNames()[0] || "平稳期";
       return {
         date: normalizeDate(record.date),
-        stage,
+        stage: String(record.stage || fallbackStage).trim() || fallbackStage,
         outerScore: toScore(record.outerScore),
         innerScore: toScore(record.innerScore),
         finalScore: toScore(record.finalScore),
@@ -724,7 +761,55 @@
       };
     }
 
-    async function loadCloudRecords() {
+    async function loadAllCloudData() {
+      if (!currentUser) return;
+      await loadStages();
+      await loadCloudRecords(false);
+      resetForm();
+      render();
+      showToast("已同步");
+    }
+
+    async function loadStages() {
+      if (!currentUser) return;
+      const { data, error } = await supabaseClient
+        .from("user_stages")
+        .select("id,name,sort_order")
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        showToast("读取阶段失败：" + error.message);
+        stageOptions = DEFAULT_STAGES.map((name, index) => ({ id: null, name, sort_order: index }));
+        return;
+      }
+
+      stageOptions = data || [];
+      if (stageOptions.length === 0) {
+        await seedDefaultStages(false);
+        const { data: seeded } = await supabaseClient
+          .from("user_stages")
+          .select("id,name,sort_order")
+          .order("sort_order", { ascending: true });
+        stageOptions = seeded || [];
+      }
+    }
+
+    async function seedDefaultStages(showMessage = true) {
+      if (!currentUser) return;
+      const rows = DEFAULT_STAGES.map((name, index) => ({
+        user_id: currentUser.id,
+        name,
+        sort_order: index
+      }));
+      const { error } = await supabaseClient
+        .from("user_stages")
+        .upsert(rows, { onConflict: "user_id,name" });
+      if (error) return showToast("补回默认阶段失败：" + error.message);
+      if (showMessage) showToast("默认阶段已补回");
+    }
+
+    async function loadCloudRecords(showMessage = true) {
       if (!currentUser) return;
       const { data, error } = await supabaseClient
         .from("state_records")
@@ -736,9 +821,8 @@
         return;
       }
       records = (data || []).map(fromDb);
-      resetForm();
       render();
-      showToast("已同步");
+      if (showMessage) showToast("已同步");
     }
 
     function resetForm() {
@@ -747,7 +831,8 @@
       $("modeTag").textContent = "新增";
       $("saveBtn").textContent = "保存记录";
       $("date").value = todayString();
-      $("stage").value = "平稳期";
+      renderStageControls();
+      $("stage").value = activeStageNames()[0] || "平稳期";
       $("outerScore").value = "";
       $("innerScore").value = "";
       $("finalScore").value = "";
@@ -773,6 +858,8 @@
       const record = getFormData();
       if (!record.date) return showToast("请填写日期");
 
+      await ensureStagesExist([record.stage]);
+
       if (editingDate && editingDate !== record.date) {
         const { error: deleteError } = await supabaseClient
           .from("state_records")
@@ -786,14 +873,18 @@
         .upsert(toDb(record), { onConflict: "user_id,date" });
 
       if (error) return showToast("保存失败：" + error.message);
-      await loadCloudRecords();
-      showToast("已保存到云端");
+      await loadStages();
+      await loadCloudRecords(false);
+      resetForm();
+      showToast("已保存并自动同步");
     });
 
     function editRecord(date) {
       const r = records.find(item => item.date === date);
       if (!r) return;
       editingDate = date;
+      ensureStageOptionVisible(r.stage);
+      renderStageControls(r.stage);
       $("formTitle").textContent = "编辑记录";
       $("modeTag").textContent = r.date;
       $("saveBtn").textContent = "保存修改";
@@ -807,6 +898,17 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
+    function ensureStageOptionVisible(stageName) {
+      if (!stageName) return;
+      const exists = Array.from($("stage").options).some(option => option.value === stageName);
+      if (!exists) {
+        const option = document.createElement("option");
+        option.value = stageName;
+        option.textContent = `${stageName}（历史）`;
+        $("stage").appendChild(option);
+      }
+    }
+
     async function deleteRecord(date) {
       if (!confirm(`删除 ${date} 的记录？`)) return;
       const { error } = await supabaseClient
@@ -814,8 +916,78 @@
         .delete()
         .eq("date", date);
       if (error) return showToast("删除失败：" + error.message);
-      await loadCloudRecords();
-      showToast("已删除");
+      await loadCloudRecords(false);
+      showToast("已删除并自动同步");
+    }
+
+    async function clearAllData() {
+      if (!currentUser) return showToast("请先登录");
+      if (!records.length) return showToast("当前没有记录");
+      if (!confirm("确定清空所有状态记录？阶段设置不会被删除。")) return;
+      const { error } = await supabaseClient
+        .from("state_records")
+        .delete()
+        .eq("user_id", currentUser.id);
+      if (error) return showToast("清空失败：" + error.message);
+      await loadCloudRecords(false);
+      resetForm();
+      showToast("记录已清空");
+    }
+
+    async function addStage() {
+      if (!currentUser) return showToast("请先登录");
+      const name = $("newStageName").value.trim();
+      if (!name) return showToast("请输入阶段名称");
+      if (name.length > 20) return showToast("阶段名称不要超过 20 个字");
+      if (activeStageNames().includes(name)) return showToast("这个阶段已经存在");
+
+      const maxOrder = stageOptions.reduce((max, s) => Math.max(max, Number(s.sort_order || 0)), -1);
+      const { error } = await supabaseClient
+        .from("user_stages")
+        .insert({ user_id: currentUser.id, name, sort_order: maxOrder + 1 });
+      if (error) return showToast("新增阶段失败：" + error.message);
+      $("newStageName").value = "";
+      await loadStages();
+      render();
+      showToast("阶段已新增");
+    }
+
+    async function deleteStage(stageId, stageName) {
+      if (!currentUser) return showToast("请先登录");
+      if (stageOptions.length <= 1) return showToast("至少保留一个阶段");
+      if (!confirm(`删除阶段「${stageName}」？历史记录不会被删除。`)) return;
+      const { error } = await supabaseClient
+        .from("user_stages")
+        .delete()
+        .eq("id", stageId);
+      if (error) return showToast("删除阶段失败：" + error.message);
+      await loadStages();
+      render();
+      showToast("阶段已删除");
+    }
+
+    async function resetDefaultStages() {
+      await seedDefaultStages(true);
+      await loadStages();
+      render();
+    }
+
+    async function ensureStagesExist(names) {
+      if (!currentUser) return;
+      const existing = new Set(activeStageNames());
+      const missing = Array.from(new Set(names.map(n => String(n || "").trim()).filter(Boolean)))
+        .filter(name => !existing.has(name));
+      if (!missing.length) return;
+      const maxOrder = stageOptions.reduce((max, s) => Math.max(max, Number(s.sort_order || 0)), -1);
+      const rows = missing.map((name, index) => ({
+        user_id: currentUser.id,
+        name,
+        sort_order: maxOrder + index + 1
+      }));
+      const { error } = await supabaseClient
+        .from("user_stages")
+        .upsert(rows, { onConflict: "user_id,name" });
+      if (!error) await loadStages();
     }
 
     function escapeHTML(text) {
@@ -845,6 +1017,61 @@
           return (stageFilter === "全部" || r.stage === stageFilter) && (!keyword || text.includes(keyword));
         })
         .sort((a, b) => sort === "asc" ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date));
+    }
+
+    function getChartDateRange() {
+      const value = $("chartRange").value;
+      if (value === "all") return { start: null, end: null };
+      if (value === "custom") {
+        return {
+          start: $("chartStart").value || null,
+          end: $("chartEnd").value || null
+        };
+      }
+      const days = Number(value);
+      const end = todayString();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days + 1);
+      const y = startDate.getFullYear();
+      const m = String(startDate.getMonth() + 1).padStart(2, "0");
+      const d = String(startDate.getDate()).padStart(2, "0");
+      return { start: `${y}-${m}-${d}`, end };
+    }
+
+    function inDateRange(record, range) {
+      return (!range.start || record.date >= range.start) && (!range.end || record.date <= range.end);
+    }
+
+    function chartRecords() {
+      const range = getChartDateRange();
+      return records
+        .filter(r => !isZeroScoreRecord(r))
+        .filter(r => inDateRange(r, range))
+        .sort((a, b) => a.date.localeCompare(b.date));
+    }
+
+    function onChartRangeChange() {
+      const custom = $("chartRange").value === "custom";
+      $("chartStart").disabled = !custom;
+      $("chartEnd").disabled = !custom;
+      render();
+    }
+
+    function renderStageControls(selectedStage = null) {
+      const stageNames = activeStageNames();
+      const currentStage = selectedStage || $("stage")?.value || stageNames[0] || "平稳期";
+      $("stage").innerHTML = stageNames
+        .map(name => `<option value="${escapeHTML(name)}">${escapeHTML(name)}</option>`)
+        .join("");
+      ensureStageOptionVisible(currentStage);
+      $("stage").value = currentStage;
+
+      const currentFilter = $("stageFilter")?.value || "全部";
+      const filterNames = allStageNamesForDisplay();
+      $("stageFilter").innerHTML = `<option value="全部">全部阶段</option>` + filterNames
+        .map(name => `<option value="${escapeHTML(name)}">${escapeHTML(name)}</option>`)
+        .join("");
+      $("stageFilter").value = filterNames.includes(currentFilter) ? currentFilter : "全部";
     }
 
     function renderStats() {
@@ -887,10 +1114,64 @@
       `).join("");
     }
 
+    function renderInsights() {
+      const keyword = $("insightSearch")?.value.trim().toLowerCase() || "";
+      const sort = $("insightSort")?.value || "desc";
+      const list = records
+        .filter(r => r.insight && r.insight.trim())
+        .filter(r => !keyword || `${r.date} ${r.stage} ${r.insight}`.toLowerCase().includes(keyword))
+        .sort((a, b) => sort === "asc" ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date));
+
+      if (!list.length) {
+        $("insights").innerHTML = `<div class="empty">暂无感悟记录</div>`;
+        return;
+      }
+
+      $("insights").innerHTML = list.map(r => `
+        <article class="insight-card">
+          <div class="record-head">
+            <div class="date">${escapeHTML(r.date)}</div>
+            <div class="badges">
+              <span class="badge stage-badge">${escapeHTML(r.stage)}</span>
+              <span class="badge ${scoreClass(r.finalScore)}">评 ${r.finalScore}</span>
+            </div>
+          </div>
+          <div class="insight-text">${escapeHTML(r.insight)}</div>
+          <div class="record-actions">
+            <button class="btn btn-light" onclick="editRecord('${r.date}')">编辑这天</button>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function renderStageManager() {
+      if (!stageOptions.length) {
+        $("stageManager").innerHTML = `<div class="empty">暂无阶段，请新增或补回默认阶段</div>`;
+        return;
+      }
+      $("stageManager").innerHTML = stageOptions.map(stage => {
+        const count = records.filter(r => r.stage === stage.name).length;
+        return `
+          <article class="stage-card">
+            <div class="stage-head">
+              <div>
+                <div class="date">${escapeHTML(stage.name)}</div>
+                <div class="record-text" style="color: var(--muted);">历史记录：${count} 天</div>
+              </div>
+              <div class="badges"><span class="badge">可选阶段</span></div>
+            </div>
+            <div class="stage-actions">
+              <button class="btn btn-danger" onclick="deleteStage('${stage.id}', '${escapeHTML(stage.name).replace(/'/g, "\\'")}')">删除阶段</button>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
     function drawChart() {
       const canvas = $("scoreChart");
       const ctx = canvas.getContext("2d");
-      const list = records.filter(r => !isZeroScoreRecord(r)).sort((a, b) => a.date.localeCompare(b.date));
+      const list = chartRecords();
       const w = canvas.width, h = canvas.height;
       const pad = 42;
 
@@ -902,8 +1183,8 @@
       ctx.fillStyle = "#7a8499";
       ctx.lineWidth = 1;
       ctx.font = "12px sans-serif";
-      for (let y = 0; y <= 100; y += 20) {
-        const py = h - pad - y / 100 * (h - pad * 2);
+      for (let y = CHART_MIN_SCORE; y <= CHART_MAX_SCORE; y += 10) {
+        const py = h - pad - (y - CHART_MIN_SCORE) / (CHART_MAX_SCORE - CHART_MIN_SCORE) * (h - pad * 2);
         ctx.beginPath();
         ctx.moveTo(pad, py);
         ctx.lineTo(w - pad, py);
@@ -919,7 +1200,10 @@
       }
 
       const xAt = i => list.length === 1 ? w / 2 : pad + i / (list.length - 1) * (w - pad * 2);
-      const yAt = score => h - pad - Number(score || 0) / 100 * (h - pad * 2);
+      const yAt = score => {
+        const clamped = Math.max(CHART_MIN_SCORE, Math.min(CHART_MAX_SCORE, Number(score || 0)));
+        return h - pad - (clamped - CHART_MIN_SCORE) / (CHART_MAX_SCORE - CHART_MIN_SCORE) * (h - pad * 2);
+      };
 
       function line(key, color) {
         ctx.strokeStyle = color;
@@ -967,16 +1251,17 @@
     }
 
     function renderStageList() {
-      const validRecords = records.filter(r => !isZeroScoreRecord(r));
+      const validRecords = chartRecords();
       const total = validRecords.length;
-      const counts = Object.fromEntries(stages.map(s => [s, 0]));
+      const stageNames = allStageNamesForDisplay();
+      const counts = Object.fromEntries(stageNames.map(s => [s, 0]));
       validRecords.forEach(r => counts[r.stage] = (counts[r.stage] || 0) + 1);
-      $("stageList").innerHTML = stages.map(stage => {
+      $("stageList").innerHTML = stageNames.map(stage => {
         const count = counts[stage] || 0;
         const pct = total ? Math.round(count / total * 100) : 0;
         return `
           <div class="stage-row">
-            <span>${stage}</span>
+            <span>${escapeHTML(stage)}</span>
             <div class="bar"><span style="width:${pct}%"></span></div>
             <span>${count}天</span>
           </div>
@@ -985,8 +1270,11 @@
     }
 
     function render() {
+      renderStageControls();
       renderStats();
       renderRecords();
+      renderInsights();
+      renderStageManager();
       renderStageList();
       drawChart();
     }
@@ -996,6 +1284,8 @@
       document.querySelectorAll(".tab").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === tab));
       $("recordsPanel").style.display = tab === "records" ? "block" : "none";
       $("chartPanel").style.display = tab === "chart" ? "block" : "none";
+      $("insightsPanel").style.display = tab === "insights" ? "block" : "none";
+      $("stagesPanel").style.display = tab === "stages" ? "block" : "none";
       if (tab === "chart") setTimeout(drawChart, 60);
     }
 
@@ -1064,22 +1354,24 @@
           };
           if (map.date < 0) return showToast("缺少日期列");
 
-          const imported = rows.slice(1).map(row => normalizeRecord({
+          const normalized = rows.slice(1).map(row => normalizeRecord({
             date: row[map.date],
-            stage: map.stage >= 0 ? row[map.stage] : "平稳期",
+            stage: map.stage >= 0 ? row[map.stage] : activeStageNames()[0],
             outerScore: map.outerScore >= 0 ? row[map.outerScore] : 0,
             innerScore: map.innerScore >= 0 ? row[map.innerScore] : 0,
             finalScore: map.finalScore >= 0 ? row[map.finalScore] : 0,
             summary: map.summary >= 0 ? row[map.summary] : "",
             insight: map.insight >= 0 ? row[map.insight] : ""
-          })).filter(r => r.date).map(toDb);
+          })).filter(r => r.date);
 
-          if (!imported.length) return showToast("没有可导入记录");
+          if (!normalized.length) return showToast("没有可导入记录");
+          await ensureStagesExist(normalized.map(r => r.stage));
+          const imported = normalized.map(toDb);
           const { error } = await supabaseClient
             .from("state_records")
             .upsert(imported, { onConflict: "user_id,date" });
           if (error) return showToast("导入失败：" + error.message);
-          await loadCloudRecords();
+          await loadAllCloudData();
           showToast(`导入 ${imported.length} 条`);
         } catch {
           showToast("导入失败");
@@ -1096,6 +1388,10 @@
 
     window.addEventListener("DOMContentLoaded", async () => {
       $("todayText").textContent = todayString();
+      $("chartEnd").value = todayString();
+      const start = new Date();
+      start.setDate(start.getDate() - 89);
+      $("chartStart").value = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
       resetForm();
       render();
       await initAuth();
