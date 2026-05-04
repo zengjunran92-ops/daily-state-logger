@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>状态日记</title>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --card: rgba(255, 255, 255, 0.86);
+      --card-solid: #ffffff;
+      --text: #172033;
+      --muted: #7a8499;
+      --line: rgba(23, 32, 51, 0.09);
+      --blue: #3b82f6;
+      --blue-2: #2563eb;
+      --green: #22c55e;
+      --orange: #f59e0b;
+      --red: #ef4444;
+      --shadow: 0 18px 45px rgba(39, 55, 88, 0.12);
+      --soft-shadow: 0 10px 28px rgba(39, 55, 88, 0.08);
+      --radius: 24px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(59,130,246,0.18), transparent 34%),
+        radial-gradient(circle at top right, rgba(34,197,94,0.14), transparent 30%),
+        linear-gradient(180deg, #f8fbff 0%, var(--bg) 42%, #eef2f8 100%);
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      transition: 0.16s ease;
+    }
+
+    .app {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 22px;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 18px;
+      margin-bottom: 18px;
+      padding: 10px 4px 4px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(30px, 5vw, 46px);
+      letter-spacing: -0.05em;
+      line-height: 1.08;
+    }
+
+    .hero p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .hero-date {
+      min-width: 150px;
+      text-align: right;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 390px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.75);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+    }
+
+    .panel-inner { padding: 20px; }
+
+    .form-panel {
+      position: sticky;
+      top: 18px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 21px;
+      letter-spacing: -0.02em;
+    }
+
+    .tag {
+      border-radius: 999px;
+      background: #edf4ff;
+      color: #2563eb;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .field { margin-bottom: 14px; }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #374151;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      outline: none;
+      background: rgba(255,255,255,0.88);
+      border-radius: 16px;
+      padding: 12px 13px;
+      color: var(--text);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+    }
+
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(59,130,246,0.72);
+      box-shadow: 0 0 0 4px rgba(59,130,246,0.12);
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .score-card {
+      background: rgba(255,255,255,0.64);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 10px;
+    }
+
+    .score-card label {
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .score-card input {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 900;
+      padding: 9px 6px;
+      border-radius: 14px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .btn {
+      border-radius: 16px;
+      padding: 12px 16px;
+      font-weight: 900;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 44px;
+    }
+
+    .btn-primary {
+      flex: 1;
+      color: #fff;
+      background: linear-gradient(135deg, var(--blue), var(--blue-2));
+      box-shadow: 0 10px 22px rgba(37,99,235,0.23);
+    }
+
+    .btn-primary:hover { transform: translateY(-1px); }
+
+    .btn-light {
+      color: #2d3a52;
+      background: rgba(255,255,255,0.78);
+      border: 1px solid var(--line);
+    }
+
+    .btn-danger {
+      color: #b91c1c;
+      background: #fee2e2;
+    }
+
+    .tools {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 14px 20px 20px;
+      border-top: 1px solid var(--line);
+      background: rgba(255,255,255,0.38);
+    }
+
+    .tools .btn {
+      padding: 10px 8px;
+      min-height: 40px;
+      font-size: 13px;
+      border-radius: 14px;
+    }
+
+    #csvInput { display: none; }
+
+    .topbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 14px;
+      background: rgba(255,255,255,0.45);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tab {
+      flex: 1;
+      border-radius: 16px;
+      padding: 11px;
+      color: var(--muted);
+      background: transparent;
+      font-weight: 900;
+    }
+
+    .tab.active {
+      background: #fff;
+      color: var(--blue-2);
+      box-shadow: var(--soft-shadow);
+    }
+
+    .content { padding: 20px; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat {
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 14px;
+      box-shadow: var(--soft-shadow);
+    }
+
+    .stat-num {
+      font-size: 26px;
+      font-weight: 950;
+      line-height: 1;
+    }
+
+    .stat-name {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: 1.4fr 0.9fr 0.9fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .records {
+      display: grid;
+      gap: 12px;
+    }
+
+    .record {
+      background: rgba(255,255,255,0.82);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 16px;
+      box-shadow: var(--soft-shadow);
+    }
+
+    .record-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .date {
+      font-size: 18px;
+      font-weight: 950;
+      letter-spacing: -0.02em;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      justify-content: flex-end;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 10px;
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .stage-badge { background: #dbeafe; color: #1d4ed8; }
+    .good { background: #dcfce7; color: #166534; }
+    .mid { background: #fef3c7; color: #92400e; }
+    .low { background: #fee2e2; color: #991b1b; }
+
+    .record-text {
+      margin: 8px 0 0;
+      white-space: pre-wrap;
+      color: #344054;
+      font-size: 14px;
+    }
+
+    .record-text strong { color: #111827; }
+
+    .record-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 13px;
+    }
+
+    .record-actions .btn {
+      min-height: 34px;
+      padding: 8px 11px;
+      border-radius: 12px;
+      font-size: 13px;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 42px 16px;
+      background: rgba(255,255,255,0.56);
+      border: 1px dashed rgba(23,32,51,0.18);
+      border-radius: 22px;
+      font-weight: 700;
+    }
+
+    .chart-card {
+      background: rgba(255,255,255,0.78);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 18px;
+      box-shadow: var(--soft-shadow);
+    }
+
+    .chart-card h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 320px;
+      display: block;
+    }
+
+    .stage-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .stage-row {
+      display: grid;
+      grid-template-columns: 72px 1fr 54px;
+      gap: 10px;
+      align-items: center;
+      color: #344054;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .bar {
+      height: 10px;
+      background: #e8edf5;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #93c5fd, #2563eb);
+      border-radius: 999px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      color: #fff;
+      background: rgba(17,24,39,0.92);
+      border-radius: 999px;
+      padding: 11px 15px;
+      font-weight: 800;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.2s ease;
+      z-index: 100;
+      max-width: 90vw;
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      bottom: 34px;
+    }
+
+    @media (max-width: 900px) {
+      .app { padding: 14px; }
+      .hero { align-items: flex-start; flex-direction: column; }
+      .hero-date { text-align: left; }
+      .layout { grid-template-columns: 1fr; }
+      .form-panel { position: static; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .filters { grid-template-columns: 1fr; }
+      .tools { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 520px) {
+      .panel-inner, .content { padding: 16px; }
+      .score-grid { grid-template-columns: 1fr; }
+      .record-head { flex-direction: column; }
+      .badges { justify-content: flex-start; }
+      .topbar { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(14px); }
+      .tools { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div>
+        <h1>状态日记</h1>
+        <p>每日记录状态阶段、动力、脑力和复盘。</p>
+      </div>
+      <div class="hero-date" id="todayText"></div>
+    </header>
+
+    <div class="layout">
+      <section class="panel form-panel">
+        <div class="panel-inner">
+          <div class="section-title">
+            <h2 id="formTitle">记录今天</h2>
+            <span class="tag" id="modeTag">新增</span>
+          </div>
+
+          <form id="recordForm">
+            <div class="field">
+              <label for="date">日期</label>
+              <input id="date" type="date" required />
+            </div>
+
+            <div class="field">
+              <label for="stage">阶段</label>
+              <select id="stage" required>
+                <option value="平稳期">平稳期</option>
+                <option value="上升期">上升期</option>
+                <option value="稳定期">稳定期</option>
+                <option value="高位期">高位期</option>
+                <option value="巅峰期">巅峰期</option>
+                <option value="失衡期">失衡期</option>
+                <option value="崩溃期">崩溃期</option>
+                <option value="修复期">修复期</option>
+              </select>
+            </div>
+
+            <div class="score-grid">
+              <div class="score-card">
+                <label for="outerScore">外状态</label>
+                <input id="outerScore" type="number" min="0" max="100" step="1" placeholder="0" required />
+              </div>
+              <div class="score-card">
+                <label for="innerScore">内状态</label>
+                <input id="innerScore" type="number" min="0" max="100" step="1" placeholder="0" required />
+              </div>
+              <div class="score-card">
+                <label for="finalScore">最终评分</label>
+                <input id="finalScore" type="number" min="0" max="100" step="1" placeholder="0" required />
+              </div>
+            </div>
+
+            <div class="field" style="margin-top: 14px;">
+              <label for="summary">今日简记</label>
+              <textarea id="summary" placeholder="今天的大致事件、不足、睡眠、学习情况等。"></textarea>
+            </div>
+
+            <div class="field">
+              <label for="insight">今日感悟</label>
+              <textarea id="insight" placeholder="可选，有感悟就写。"></textarea>
+            </div>
+
+            <div class="actions">
+              <button class="btn btn-primary" type="submit" id="saveBtn">保存记录</button>
+              <button class="btn btn-light" type="button" onclick="resetForm()">取消</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="tools">
+          <button class="btn btn-light" onclick="exportCSV()">导出 CSV</button>
+          <label class="btn btn-light" for="csvInput">导入 CSV</label>
+          <input id="csvInput" type="file" accept=".csv,text/csv" onchange="importCSV(event)" />
+          <button class="btn btn-danger" onclick="clearAllData()">清空数据</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="topbar">
+          <button class="tab active" data-tab="records" onclick="switchTab('records')">记录</button>
+          <button class="tab" data-tab="chart" onclick="switchTab('chart')">趋势</button>
+        </div>
+
+        <div class="content">
+          <div class="stats" id="stats"></div>
+
+          <div id="recordsPanel">
+            <div class="filters">
+              <input id="searchInput" type="search" placeholder="搜索简记 / 感悟" oninput="render()" />
+              <select id="stageFilter" onchange="render()">
+                <option value="全部">全部阶段</option>
+                <option value="平稳期">平稳期</option>
+                <option value="上升期">上升期</option>
+                <option value="稳定期">稳定期</option>
+                <option value="高位期">高位期</option>
+                <option value="巅峰期">巅峰期</option>
+                <option value="失衡期">失衡期</option>
+                <option value="崩溃期">崩溃期</option>
+                <option value="修复期">修复期</option>
+              </select>
+              <select id="sortOrder" onchange="render()">
+                <option value="desc">新到旧</option>
+                <option value="asc">旧到新</option>
+              </select>
+            </div>
+            <div class="records" id="records"></div>
+          </div>
+
+          <div id="chartPanel" style="display:none;">
+            <div class="chart-card">
+              <h3>分数趋势</h3>
+              <canvas id="scoreChart" width="900" height="340"></canvas>
+            </div>
+            <div class="chart-card" style="margin-top: 14px;">
+              <h3>阶段分布</h3>
+              <div class="stage-list" id="stageList"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORAGE_KEY = "daily_state_tracker_records_v2";
+    const OLD_STORAGE_KEY = "daily_state_tracker_records_v1";
+    const stages = ["平稳期", "上升期", "稳定期", "高位期", "巅峰期", "失衡期", "崩溃期", "修复期"];
+
+    let records = [];
+    let editingDate = null;
+    let activeTab = "records";
+
+    const $ = (id) => document.getElementById(id);
+
+    function todayString() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const d = String(now.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function showToast(message) {
+      const toast = $("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove("show"), 1700);
+    }
+
+    function toScore(value) {
+      const n = Number(value);
+      if (Number.isNaN(n)) return 0;
+      return Math.max(0, Math.min(100, Math.round(n)));
+    }
+
+    function normalizeDate(raw) {
+      const s = String(raw || "").trim().replace(/[./]/g, "-");
+      if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(s)) {
+        const [y, m, d] = s.split("-");
+        return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      }
+      if (/^\d{8}$/.test(s)) return `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`;
+      if (/^\d{4}$/.test(s)) return `${new Date().getFullYear()}-${s.slice(0,2)}-${s.slice(2,4)}`;
+      return s;
+    }
+
+    function normalizeRecord(record) {
+      const stage = stages.includes(record.stage) ? record.stage : "平稳期";
+      return {
+        date: normalizeDate(record.date),
+        stage,
+        outerScore: toScore(record.outerScore),
+        innerScore: toScore(record.innerScore),
+        finalScore: toScore(record.finalScore),
+        summary: String(record.summary || ""),
+        insight: String(record.insight || "")
+      };
+    }
+
+    function loadRecords() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(OLD_STORAGE_KEY);
+        records = raw ? JSON.parse(raw).map(normalizeRecord).filter(r => r.date) : [];
+        saveRecords();
+      } catch {
+        records = [];
+      }
+    }
+
+    function saveRecords() {
+      records.sort((a, b) => a.date.localeCompare(b.date));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    }
+
+    function resetForm() {
+      editingDate = null;
+      $("formTitle").textContent = "记录今天";
+      $("modeTag").textContent = "新增";
+      $("saveBtn").textContent = "保存记录";
+      $("date").value = todayString();
+      $("stage").value = "平稳期";
+      $("outerScore").value = "";
+      $("innerScore").value = "";
+      $("finalScore").value = "";
+      $("summary").value = "";
+      $("insight").value = "";
+    }
+
+    function getFormData() {
+      return normalizeRecord({
+        date: $("date").value,
+        stage: $("stage").value,
+        outerScore: $("outerScore").value,
+        innerScore: $("innerScore").value,
+        finalScore: $("finalScore").value,
+        summary: $("summary").value.trim(),
+        insight: $("insight").value.trim()
+      });
+    }
+
+    $("recordForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const record = getFormData();
+      if (!record.date) return showToast("请填写日期");
+
+      if (editingDate && editingDate !== record.date) {
+        records = records.filter(r => r.date !== editingDate);
+      }
+
+      const index = records.findIndex(r => r.date === record.date);
+      if (index >= 0 && editingDate !== record.date) {
+        if (!confirm(`${record.date} 已有记录，是否覆盖？`)) return;
+      }
+
+      const nextIndex = records.findIndex(r => r.date === record.date);
+      if (nextIndex >= 0) records[nextIndex] = record;
+      else records.push(record);
+
+      saveRecords();
+      resetForm();
+      render();
+      showToast("已保存");
+    });
+
+    function editRecord(date) {
+      const r = records.find(item => item.date === date);
+      if (!r) return;
+      editingDate = date;
+      $("formTitle").textContent = "编辑记录";
+      $("modeTag").textContent = r.date;
+      $("saveBtn").textContent = "保存修改";
+      $("date").value = r.date;
+      $("stage").value = r.stage;
+      $("outerScore").value = r.outerScore;
+      $("innerScore").value = r.innerScore;
+      $("finalScore").value = r.finalScore;
+      $("summary").value = r.summary;
+      $("insight").value = r.insight;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function deleteRecord(date) {
+      if (!confirm(`删除 ${date} 的记录？`)) return;
+      records = records.filter(r => r.date !== date);
+      saveRecords();
+      render();
+      showToast("已删除");
+    }
+
+    function clearAllData() {
+      if (!records.length) return showToast("当前没有数据");
+      if (!confirm("确定清空全部数据？建议先导出 CSV。")) return;
+      records = [];
+      saveRecords();
+      resetForm();
+      render();
+      showToast("已清空");
+    }
+
+    function escapeHTML(text) {
+      return String(text).replace(/[&<>\"]/g, ch => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;"
+      }[ch]));
+    }
+
+    function scoreClass(score) {
+      if (score >= 75) return "good";
+      if (score >= 60) return "mid";
+      return "low";
+    }
+
+    function isZeroScoreRecord(record) {
+      return Number(record.outerScore) === 0 && Number(record.innerScore) === 0 && Number(record.finalScore) === 0;
+    }
+
+    function average(list, key) {
+      if (!list.length) return 0;
+      return Math.round(list.reduce((sum, item) => sum + Number(item[key] || 0), 0) / list.length);
+    }
+
+    function filteredRecords() {
+      const keyword = $("searchInput").value.trim().toLowerCase();
+      const stageFilter = $("stageFilter").value;
+      const sort = $("sortOrder").value;
+      return records
+        .filter(r => {
+          const text = `${r.summary} ${r.insight} ${r.stage}`.toLowerCase();
+          return (stageFilter === "全部" || r.stage === stageFilter) && (!keyword || text.includes(keyword));
+        })
+        .sort((a, b) => sort === "asc" ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date));
+    }
+
+    function renderStats() {
+      const list = filteredRecords();
+      const scoredList = list.filter(r => !isZeroScoreRecord(r));
+      const latest = records.length ? records[records.length - 1] : null;
+      $("stats").innerHTML = `
+        <div class="stat"><div class="stat-num">${list.length}</div><div class="stat-name">记录天数</div></div>
+        <div class="stat"><div class="stat-num">${average(scoredList, "outerScore")}</div><div class="stat-name">平均外状态</div></div>
+        <div class="stat"><div class="stat-num">${average(scoredList, "innerScore")}</div><div class="stat-name">平均内状态</div></div>
+        <div class="stat"><div class="stat-num">${latest ? latest.stage : "—"}</div><div class="stat-name">最新阶段</div></div>
+      `;
+    }
+
+    function renderRecords() {
+      const list = filteredRecords();
+      if (!list.length) {
+        $("records").innerHTML = `<div class="empty">暂无记录</div>`;
+        return;
+      }
+      $("records").innerHTML = list.map(r => `
+        <article class="record">
+          <div class="record-head">
+            <div class="date">${escapeHTML(r.date)}</div>
+            <div class="badges">
+              <span class="badge stage-badge">${escapeHTML(r.stage)}</span>
+              <span class="badge">外 ${r.outerScore}</span>
+              <span class="badge">内 ${r.innerScore}</span>
+              <span class="badge ${scoreClass(r.finalScore)}">评 ${r.finalScore}</span>
+            </div>
+          </div>
+          ${r.summary ? `<div class="record-text"><strong>简记：</strong>${escapeHTML(r.summary)}</div>` : ""}
+          ${r.insight ? `<div class="record-text"><strong>感悟：</strong>${escapeHTML(r.insight)}</div>` : ""}
+          ${!r.summary && !r.insight ? `<div class="record-text" style="color: var(--muted);">没有文字记录</div>` : ""}
+          <div class="record-actions">
+            <button class="btn btn-light" onclick="editRecord('${r.date}')">编辑</button>
+            <button class="btn btn-danger" onclick="deleteRecord('${r.date}')">删除</button>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function drawChart() {
+      const canvas = $("scoreChart");
+      const ctx = canvas.getContext("2d");
+      const list = records
+        .filter(r => !isZeroScoreRecord(r))
+        .sort((a, b) => a.date.localeCompare(b.date));
+      const w = canvas.width, h = canvas.height;
+      const pad = 42;
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "rgba(255,255,255,0.9)";
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.strokeStyle = "#e5e7eb";
+      ctx.fillStyle = "#7a8499";
+      ctx.lineWidth = 1;
+      ctx.font = "12px sans-serif";
+      for (let y = 0; y <= 100; y += 20) {
+        const py = h - pad - y / 100 * (h - pad * 2);
+        ctx.beginPath();
+        ctx.moveTo(pad, py);
+        ctx.lineTo(w - pad, py);
+        ctx.stroke();
+        ctx.fillText(y, 12, py + 4);
+      }
+
+      if (!list.length) {
+        ctx.fillStyle = "#7a8499";
+        ctx.font = "20px sans-serif";
+        ctx.fillText("暂无有效趋势数据", w / 2 - 78, h / 2);
+        return;
+      }
+
+      const xAt = i => list.length === 1 ? w / 2 : pad + i / (list.length - 1) * (w - pad * 2);
+      const yAt = score => h - pad - Number(score || 0) / 100 * (h - pad * 2);
+
+      function line(key, color) {
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        list.forEach((r, i) => {
+          const x = xAt(i), y = yAt(r[key]);
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        list.forEach((r, i) => {
+          ctx.beginPath();
+          ctx.arc(xAt(i), yAt(r[key]), 4, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+
+      line("outerScore", "#3b82f6");
+      line("innerScore", "#22c55e");
+      line("finalScore", "#f59e0b");
+
+      const legends = [["#3b82f6", "外状态"], ["#22c55e", "内状态"], ["#f59e0b", "最终评分"]];
+      legends.forEach(([color, label], i) => {
+        const x = pad + i * 112;
+        ctx.fillStyle = color;
+        ctx.fillRect(x, 17, 18, 8);
+        ctx.fillStyle = "#344054";
+        ctx.font = "13px sans-serif";
+        ctx.fillText(label, x + 26, 25);
+      });
+
+      const labels = pickLabels(list);
+      ctx.fillStyle = "#7a8499";
+      ctx.font = "11px sans-serif";
+      labels.forEach(({ i, date }) => ctx.fillText(date.slice(5), xAt(i) - 14, h - 14));
+    }
+
+    function pickLabels(list) {
+      if (list.length <= 6) return list.map((r, i) => ({ i, date: r.date }));
+      const set = new Set([0, list.length - 1]);
+      const step = Math.ceil(list.length / 5);
+      for (let i = 0; i < list.length; i += step) set.add(i);
+      return Array.from(set).sort((a, b) => a - b).map(i => ({ i, date: list[i].date }));
+    }
+
+    function renderStageList() {
+      const validRecords = records.filter(r => !isZeroScoreRecord(r));
+      const total = validRecords.length;
+      const counts = Object.fromEntries(stages.map(s => [s, 0]));
+      validRecords.forEach(r => counts[r.stage] = (counts[r.stage] || 0) + 1);
+      $("stageList").innerHTML = stages.map(stage => {
+        const count = counts[stage] || 0;
+        const pct = total ? Math.round(count / total * 100) : 0;
+        return `
+          <div class="stage-row">
+            <span>${stage}</span>
+            <div class="bar"><span style="width:${pct}%"></span></div>
+            <span>${count}天</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function render() {
+      renderStats();
+      renderRecords();
+      renderStageList();
+      drawChart();
+    }
+
+    function switchTab(tab) {
+      activeTab = tab;
+      document.querySelectorAll(".tab").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === tab));
+      $("recordsPanel").style.display = tab === "records" ? "block" : "none";
+      $("chartPanel").style.display = tab === "chart" ? "block" : "none";
+      if (tab === "chart") setTimeout(drawChart, 60);
+    }
+
+    function csvEscape(value) {
+      const text = String(value ?? "");
+      return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    }
+
+    function exportCSV() {
+      const headers = ["日期", "阶段", "外状态打分", "内状态打分", "最终评分", "今日简记", "今日感悟"];
+      const rows = records.map(r => [r.date, r.stage, r.outerScore, r.innerScore, r.finalScore, r.summary, r.insight]);
+      const csv = [headers, ...rows].map(row => row.map(csvEscape).join(",")).join("\n");
+      const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `状态记录-${todayString()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast("CSV 已导出");
+    }
+
+    function parseCSV(text) {
+      const rows = [];
+      let row = [], field = "", inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i], next = text[i + 1];
+        if (ch === '"') {
+          if (inQuotes && next === '"') { field += '"'; i++; }
+          else inQuotes = !inQuotes;
+        } else if (ch === "," && !inQuotes) {
+          row.push(field); field = "";
+        } else if ((ch === "\n" || ch === "\r") && !inQuotes) {
+          if (ch === "\r" && next === "\n") i++;
+          row.push(field);
+          if (row.some(c => String(c).trim())) rows.push(row);
+          row = []; field = "";
+        } else field += ch;
+      }
+      row.push(field);
+      if (row.some(c => String(c).trim())) rows.push(row);
+      return rows;
+    }
+
+    function importCSV(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const rows = parseCSV(String(e.target.result || "").replace(/^\ufeff/, ""));
+          if (rows.length < 2) return showToast("CSV 没有可导入数据");
+          const headers = rows[0].map(h => String(h).trim());
+          const idx = (...names) => headers.findIndex(h => names.includes(h));
+          const map = {
+            date: idx("日期", "date"),
+            stage: idx("阶段", "stage"),
+            outerScore: idx("外状态打分", "外状态", "outerScore"),
+            innerScore: idx("内状态打分", "内状态", "innerScore"),
+            finalScore: idx("最终评分", "最后评分", "总评分", "finalScore"),
+            summary: idx("今日简记", "备注", "简记", "summary"),
+            insight: idx("今日感悟", "感悟", "insight")
+          };
+          if (map.date < 0) return showToast("缺少日期列");
+
+          const imported = rows.slice(1).map(row => normalizeRecord({
+            date: row[map.date],
+            stage: map.stage >= 0 ? row[map.stage] : "平稳期",
+            outerScore: map.outerScore >= 0 ? row[map.outerScore] : 0,
+            innerScore: map.innerScore >= 0 ? row[map.innerScore] : 0,
+            finalScore: map.finalScore >= 0 ? row[map.finalScore] : 0,
+            summary: map.summary >= 0 ? row[map.summary] : "",
+            insight: map.insight >= 0 ? row[map.insight] : ""
+          })).filter(r => r.date);
+
+          const merged = new Map(records.map(r => [r.date, r]));
+          imported.forEach(r => merged.set(r.date, r));
+          records = Array.from(merged.values());
+          saveRecords();
+          render();
+          showToast(`导入 ${imported.length} 条`);
+        } catch {
+          showToast("导入失败");
+        } finally {
+          event.target.value = "";
+        }
+      };
+      reader.readAsText(file, "utf-8");
+    }
+
+    window.addEventListener("resize", () => {
+      if (activeTab === "chart") drawChart();
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+      $("todayText").textContent = todayString();
+      loadRecords();
+      resetForm();
+      render();
+    });
+  </script>
+</body>
+</html>
