@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>状态日记</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --bg: #f4f6fb;
-      --card: rgba(255, 255, 255, 0.86);
-      --card-solid: #ffffff;
+      --card: rgba(255, 255, 255, 0.88);
       --text: #172033;
       --muted: #7a8499;
       --line: rgba(23, 32, 51, 0.09);
@@ -35,15 +35,8 @@
         linear-gradient(180deg, #f8fbff 0%, var(--bg) 42%, #eef2f8 100%);
     }
 
-    button, input, select, textarea {
-      font: inherit;
-    }
-
-    button {
-      border: 0;
-      cursor: pointer;
-      transition: 0.16s ease;
-    }
+    button, input, select, textarea { font: inherit; }
+    button { border: 0; cursor: pointer; transition: 0.16s ease; }
 
     .app {
       width: min(1180px, 100%);
@@ -73,12 +66,27 @@
       font-size: 15px;
     }
 
-    .hero-date {
-      min-width: 150px;
+    .hero-right {
+      min-width: 210px;
       text-align: right;
       color: var(--muted);
-      font-weight: 700;
-      font-size: 14px;
+      font-size: 13px;
+      font-weight: 800;
+      display: grid;
+      gap: 8px;
+      justify-items: end;
+    }
+
+    .user-pill {
+      max-width: 280px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--line);
+      padding: 7px 11px;
+      color: #344054;
     }
 
     .layout {
@@ -88,7 +96,7 @@
       align-items: start;
     }
 
-    .panel {
+    .panel, .auth-card {
       background: var(--card);
       border: 1px solid rgba(255,255,255,0.75);
       box-shadow: var(--shadow);
@@ -97,25 +105,28 @@
       overflow: hidden;
     }
 
-    .panel-inner { padding: 20px; }
-
-    .form-panel {
-      position: sticky;
-      top: 18px;
+    .auth-wrap {
+      width: min(460px, 100%);
+      margin: 12vh auto 0;
+      padding: 0 18px;
     }
+
+    .auth-card { padding: 24px; }
+    .auth-card h1 { margin: 0 0 8px; font-size: 32px; letter-spacing: -0.04em; }
+    .auth-card p { margin: 0 0 18px; color: var(--muted); }
+
+    .panel-inner { padding: 20px; }
+    .form-panel { position: sticky; top: 18px; }
 
     .section-title {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 16px;
+      gap: 10px;
     }
 
-    .section-title h2 {
-      margin: 0;
-      font-size: 21px;
-      letter-spacing: -0.02em;
-    }
+    .section-title h2 { margin: 0; font-size: 21px; letter-spacing: -0.02em; }
 
     .tag {
       border-radius: 999px;
@@ -123,7 +134,8 @@
       color: #2563eb;
       padding: 5px 10px;
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 900;
+      white-space: nowrap;
     }
 
     .field { margin-bottom: 14px; }
@@ -132,7 +144,7 @@
       display: block;
       margin-bottom: 7px;
       font-size: 13px;
-      font-weight: 800;
+      font-weight: 900;
       color: #374151;
     }
 
@@ -140,18 +152,14 @@
       width: 100%;
       border: 1px solid var(--line);
       outline: none;
-      background: rgba(255,255,255,0.88);
+      background: rgba(255,255,255,0.9);
       border-radius: 16px;
       padding: 12px 13px;
       color: var(--text);
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
     }
 
-    textarea {
-      min-height: 92px;
-      resize: vertical;
-      line-height: 1.6;
-    }
+    textarea { min-height: 92px; resize: vertical; line-height: 1.6; }
 
     input:focus, select:focus, textarea:focus {
       border-color: rgba(59,130,246,0.72);
@@ -171,16 +179,12 @@
       padding: 10px;
     }
 
-    .score-card label {
-      margin-bottom: 6px;
-      color: var(--muted);
-      font-size: 12px;
-    }
+    .score-card label { margin-bottom: 6px; color: var(--muted); font-size: 12px; }
 
     .score-card input {
       text-align: center;
       font-size: 20px;
-      font-weight: 900;
+      font-weight: 950;
       padding: 9px 6px;
       border-radius: 14px;
     }
@@ -195,12 +199,13 @@
     .btn {
       border-radius: 16px;
       padding: 12px 16px;
-      font-weight: 900;
+      font-weight: 950;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 7px;
       min-height: 44px;
+      text-decoration: none;
     }
 
     .btn-primary {
@@ -218,10 +223,8 @@
       border: 1px solid var(--line);
     }
 
-    .btn-danger {
-      color: #b91c1c;
-      background: #fee2e2;
-    }
+    .btn-danger { color: #b91c1c; background: #fee2e2; }
+    .btn-green { color: #166534; background: #dcfce7; }
 
     .tools {
       display: grid;
@@ -232,13 +235,7 @@
       background: rgba(255,255,255,0.38);
     }
 
-    .tools .btn {
-      padding: 10px 8px;
-      min-height: 40px;
-      font-size: 13px;
-      border-radius: 14px;
-    }
-
+    .tools .btn { padding: 10px 8px; min-height: 40px; font-size: 13px; border-radius: 14px; }
     #csvInput { display: none; }
 
     .topbar {
@@ -256,7 +253,7 @@
       padding: 11px;
       color: var(--muted);
       background: transparent;
-      font-weight: 900;
+      font-weight: 950;
     }
 
     .tab.active {
@@ -282,18 +279,8 @@
       box-shadow: var(--soft-shadow);
     }
 
-    .stat-num {
-      font-size: 26px;
-      font-weight: 950;
-      line-height: 1;
-    }
-
-    .stat-name {
-      margin-top: 6px;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 800;
-    }
+    .stat-num { font-size: 26px; font-weight: 950; line-height: 1; }
+    .stat-name { margin-top: 6px; color: var(--muted); font-size: 12px; font-weight: 900; }
 
     .filters {
       display: grid;
@@ -302,10 +289,7 @@
       margin-bottom: 16px;
     }
 
-    .records {
-      display: grid;
-      gap: 12px;
-    }
+    .records { display: grid; gap: 12px; }
 
     .record {
       background: rgba(255,255,255,0.82);
@@ -323,11 +307,7 @@
       margin-bottom: 10px;
     }
 
-    .date {
-      font-size: 18px;
-      font-weight: 950;
-      letter-spacing: -0.02em;
-    }
+    .date { font-size: 18px; font-weight: 950; letter-spacing: -0.02em; }
 
     .badges {
       display: flex;
@@ -344,7 +324,7 @@
       background: #f1f5f9;
       color: #475569;
       font-size: 12px;
-      font-weight: 900;
+      font-weight: 950;
       white-space: nowrap;
     }
 
@@ -362,18 +342,8 @@
 
     .record-text strong { color: #111827; }
 
-    .record-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 13px;
-    }
-
-    .record-actions .btn {
-      min-height: 34px;
-      padding: 8px 11px;
-      border-radius: 12px;
-      font-size: 13px;
-    }
+    .record-actions { display: flex; gap: 8px; margin-top: 13px; }
+    .record-actions .btn { min-height: 34px; padding: 8px 11px; border-radius: 12px; font-size: 13px; }
 
     .empty {
       text-align: center;
@@ -382,7 +352,7 @@
       background: rgba(255,255,255,0.56);
       border: 1px dashed rgba(23,32,51,0.18);
       border-radius: 22px;
-      font-weight: 700;
+      font-weight: 800;
     }
 
     .chart-card {
@@ -393,22 +363,10 @@
       box-shadow: var(--soft-shadow);
     }
 
-    .chart-card h3 {
-      margin: 0 0 10px;
-      font-size: 18px;
-    }
+    .chart-card h3 { margin: 0 0 10px; font-size: 18px; }
+    canvas { width: 100%; height: 320px; display: block; }
 
-    canvas {
-      width: 100%;
-      height: 320px;
-      display: block;
-    }
-
-    .stage-list {
-      display: grid;
-      gap: 10px;
-      margin-top: 16px;
-    }
+    .stage-list { display: grid; gap: 10px; margin-top: 16px; }
 
     .stage-row {
       display: grid;
@@ -417,23 +375,11 @@
       align-items: center;
       color: #344054;
       font-size: 13px;
-      font-weight: 800;
+      font-weight: 900;
     }
 
-    .bar {
-      height: 10px;
-      background: #e8edf5;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-
-    .bar span {
-      display: block;
-      height: 100%;
-      width: 0;
-      background: linear-gradient(90deg, #93c5fd, #2563eb);
-      border-radius: 999px;
-    }
+    .bar { height: 10px; background: #e8edf5; border-radius: 999px; overflow: hidden; }
+    .bar span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #93c5fd, #2563eb); border-radius: 999px; }
 
     .toast {
       position: fixed;
@@ -444,7 +390,7 @@
       background: rgba(17,24,39,0.92);
       border-radius: 999px;
       padding: 11px 15px;
-      font-weight: 800;
+      font-weight: 900;
       box-shadow: var(--shadow);
       opacity: 0;
       pointer-events: none;
@@ -454,15 +400,13 @@
       text-align: center;
     }
 
-    .toast.show {
-      opacity: 1;
-      bottom: 34px;
-    }
+    .toast.show { opacity: 1; bottom: 34px; }
+    .hidden { display: none !important; }
 
     @media (max-width: 900px) {
       .app { padding: 14px; }
       .hero { align-items: flex-start; flex-direction: column; }
-      .hero-date { text-align: left; }
+      .hero-right { text-align: left; justify-items: start; }
       .layout { grid-template-columns: 1fr; }
       .form-panel { position: static; }
       .stats { grid-template-columns: repeat(2, 1fr); }
@@ -481,13 +425,36 @@
   </style>
 </head>
 <body>
-  <main class="app">
+  <section id="authView" class="auth-wrap hidden">
+    <div class="auth-card">
+      <h1>状态日记</h1>
+      <p>登录后，手机和电脑会同步同一份记录。</p>
+      <div class="field">
+        <label for="authEmail">邮箱</label>
+        <input id="authEmail" type="email" placeholder="输入邮箱" autocomplete="email" />
+      </div>
+      <div class="field">
+        <label for="authPassword">密码</label>
+        <input id="authPassword" type="password" placeholder="至少 6 位" autocomplete="current-password" />
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="signIn()">登录</button>
+        <button class="btn btn-light" onclick="signUp()">注册</button>
+      </div>
+    </div>
+  </section>
+
+  <main id="mainView" class="app hidden">
     <header class="hero">
       <div>
         <h1>状态日记</h1>
         <p>每日记录状态阶段、动力、脑力和复盘。</p>
       </div>
-      <div class="hero-date" id="todayText"></div>
+      <div class="hero-right">
+        <div id="todayText"></div>
+        <div class="user-pill" id="userEmail"></div>
+        <button class="btn btn-light" style="min-height:34px; padding:7px 12px; border-radius:999px;" onclick="signOut()">退出登录</button>
+      </div>
     </header>
 
     <div class="layout">
@@ -554,7 +521,7 @@
           <button class="btn btn-light" onclick="exportCSV()">导出 CSV</button>
           <label class="btn btn-light" for="csvInput">导入 CSV</label>
           <input id="csvInput" type="file" accept=".csv,text/csv" onchange="importCSV(event)" />
-          <button class="btn btn-danger" onclick="clearAllData()">清空数据</button>
+          <button class="btn btn-green" onclick="loadCloudRecords()">刷新同步</button>
         </div>
       </section>
 
@@ -607,13 +574,15 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const STORAGE_KEY = "daily_state_tracker_records_v2";
-    const OLD_STORAGE_KEY = "daily_state_tracker_records_v1";
-    const stages = ["平稳期", "上升期", "稳定期", "高位期", "巅峰期", "失衡期", "崩溃期", "修复期"];
+    const SUPABASE_URL = "https://xzzyndryhfdubbrozrfd.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_rZ8DgfiRpYH5ZqLwghO7Bg_aMHk-KvX";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    const stages = ["平稳期", "上升期", "稳定期", "高位期", "巅峰期", "失衡期", "崩溃期", "修复期"];
     let records = [];
     let editingDate = null;
     let activeTab = "records";
+    let currentUser = null;
 
     const $ = (id) => document.getElementById(id);
 
@@ -630,7 +599,70 @@
       toast.textContent = message;
       toast.classList.add("show");
       clearTimeout(showToast.timer);
-      showToast.timer = setTimeout(() => toast.classList.remove("show"), 1700);
+      showToast.timer = setTimeout(() => toast.classList.remove("show"), 1900);
+    }
+
+    function showAuthView() {
+      $("authView").classList.remove("hidden");
+      $("mainView").classList.add("hidden");
+    }
+
+    function showMainView() {
+      $("authView").classList.add("hidden");
+      $("mainView").classList.remove("hidden");
+      $("userEmail").textContent = currentUser?.email || "已登录";
+    }
+
+    async function initAuth() {
+      const { data } = await supabaseClient.auth.getSession();
+      currentUser = data.session?.user || null;
+      if (currentUser) {
+        showMainView();
+        await loadCloudRecords();
+      } else {
+        showAuthView();
+      }
+
+      supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+        currentUser = session?.user || null;
+        if (currentUser) {
+          showMainView();
+          await loadCloudRecords();
+        } else {
+          records = [];
+          render();
+          showAuthView();
+        }
+      });
+    }
+
+    async function signUp() {
+      const email = $("authEmail").value.trim();
+      const password = $("authPassword").value;
+      if (!email || !password) return showToast("请输入邮箱和密码");
+      if (password.length < 6) return showToast("密码至少 6 位");
+
+      const { error } = await supabaseClient.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: window.location.href }
+      });
+      if (error) return showToast(error.message);
+      showToast("注册成功。若需要验证邮箱，请先去邮箱点击确认链接");
+    }
+
+    async function signIn() {
+      const email = $("authEmail").value.trim();
+      const password = $("authPassword").value;
+      if (!email || !password) return showToast("请输入邮箱和密码");
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) return showToast(error.message);
+      showToast("已登录");
+    }
+
+    async function signOut() {
+      await supabaseClient.auth.signOut();
+      showToast("已退出");
     }
 
     function toScore(value) {
@@ -650,6 +682,10 @@
       return s;
     }
 
+    function isZeroScoreRecord(record) {
+      return Number(record.outerScore) === 0 && Number(record.innerScore) === 0 && Number(record.finalScore) === 0;
+    }
+
     function normalizeRecord(record) {
       const stage = stages.includes(record.stage) ? record.stage : "平稳期";
       return {
@@ -663,19 +699,46 @@
       };
     }
 
-    function loadRecords() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(OLD_STORAGE_KEY);
-        records = raw ? JSON.parse(raw).map(normalizeRecord).filter(r => r.date) : [];
-        saveRecords();
-      } catch {
-        records = [];
-      }
+    function fromDb(row) {
+      return normalizeRecord({
+        date: row.date,
+        stage: row.stage,
+        outerScore: row.outer_score,
+        innerScore: row.inner_score,
+        finalScore: row.final_score,
+        summary: row.summary,
+        insight: row.insight
+      });
     }
 
-    function saveRecords() {
-      records.sort((a, b) => a.date.localeCompare(b.date));
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    function toDb(record) {
+      return {
+        user_id: currentUser.id,
+        date: record.date,
+        stage: record.stage,
+        outer_score: record.outerScore,
+        inner_score: record.innerScore,
+        final_score: record.finalScore,
+        summary: record.summary,
+        insight: record.insight
+      };
+    }
+
+    async function loadCloudRecords() {
+      if (!currentUser) return;
+      const { data, error } = await supabaseClient
+        .from("state_records")
+        .select("date,stage,outer_score,inner_score,final_score,summary,insight")
+        .order("date", { ascending: true });
+
+      if (error) {
+        showToast("读取云端失败：" + error.message);
+        return;
+      }
+      records = (data || []).map(fromDb);
+      resetForm();
+      render();
+      showToast("已同步");
     }
 
     function resetForm() {
@@ -704,28 +767,27 @@
       });
     }
 
-    $("recordForm").addEventListener("submit", (event) => {
+    $("recordForm").addEventListener("submit", async (event) => {
       event.preventDefault();
+      if (!currentUser) return showToast("请先登录");
       const record = getFormData();
       if (!record.date) return showToast("请填写日期");
 
       if (editingDate && editingDate !== record.date) {
-        records = records.filter(r => r.date !== editingDate);
+        const { error: deleteError } = await supabaseClient
+          .from("state_records")
+          .delete()
+          .eq("date", editingDate);
+        if (deleteError) return showToast("修改日期失败：" + deleteError.message);
       }
 
-      const index = records.findIndex(r => r.date === record.date);
-      if (index >= 0 && editingDate !== record.date) {
-        if (!confirm(`${record.date} 已有记录，是否覆盖？`)) return;
-      }
+      const { error } = await supabaseClient
+        .from("state_records")
+        .upsert(toDb(record), { onConflict: "user_id,date" });
 
-      const nextIndex = records.findIndex(r => r.date === record.date);
-      if (nextIndex >= 0) records[nextIndex] = record;
-      else records.push(record);
-
-      saveRecords();
-      resetForm();
-      render();
-      showToast("已保存");
+      if (error) return showToast("保存失败：" + error.message);
+      await loadCloudRecords();
+      showToast("已保存到云端");
     });
 
     function editRecord(date) {
@@ -745,22 +807,15 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    function deleteRecord(date) {
+    async function deleteRecord(date) {
       if (!confirm(`删除 ${date} 的记录？`)) return;
-      records = records.filter(r => r.date !== date);
-      saveRecords();
-      render();
+      const { error } = await supabaseClient
+        .from("state_records")
+        .delete()
+        .eq("date", date);
+      if (error) return showToast("删除失败：" + error.message);
+      await loadCloudRecords();
       showToast("已删除");
-    }
-
-    function clearAllData() {
-      if (!records.length) return showToast("当前没有数据");
-      if (!confirm("确定清空全部数据？建议先导出 CSV。")) return;
-      records = [];
-      saveRecords();
-      resetForm();
-      render();
-      showToast("已清空");
     }
 
     function escapeHTML(text) {
@@ -773,10 +828,6 @@
       if (score >= 75) return "good";
       if (score >= 60) return "mid";
       return "low";
-    }
-
-    function isZeroScoreRecord(record) {
-      return Number(record.outerScore) === 0 && Number(record.innerScore) === 0 && Number(record.finalScore) === 0;
     }
 
     function average(list, key) {
@@ -839,9 +890,7 @@
     function drawChart() {
       const canvas = $("scoreChart");
       const ctx = canvas.getContext("2d");
-      const list = records
-        .filter(r => !isZeroScoreRecord(r))
-        .sort((a, b) => a.date.localeCompare(b.date));
+      const list = records.filter(r => !isZeroScoreRecord(r)).sort((a, b) => a.date.localeCompare(b.date));
       const w = canvas.width, h = canvas.height;
       const pad = 42;
 
@@ -993,11 +1042,12 @@
       return rows;
     }
 
-    function importCSV(event) {
+    async function importCSV(event) {
+      if (!currentUser) return showToast("请先登录");
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = e => {
+      reader.onload = async e => {
         try {
           const rows = parseCSV(String(e.target.result || "").replace(/^\ufeff/, ""));
           if (rows.length < 2) return showToast("CSV 没有可导入数据");
@@ -1022,13 +1072,14 @@
             finalScore: map.finalScore >= 0 ? row[map.finalScore] : 0,
             summary: map.summary >= 0 ? row[map.summary] : "",
             insight: map.insight >= 0 ? row[map.insight] : ""
-          })).filter(r => r.date);
+          })).filter(r => r.date).map(toDb);
 
-          const merged = new Map(records.map(r => [r.date, r]));
-          imported.forEach(r => merged.set(r.date, r));
-          records = Array.from(merged.values());
-          saveRecords();
-          render();
+          if (!imported.length) return showToast("没有可导入记录");
+          const { error } = await supabaseClient
+            .from("state_records")
+            .upsert(imported, { onConflict: "user_id,date" });
+          if (error) return showToast("导入失败：" + error.message);
+          await loadCloudRecords();
           showToast(`导入 ${imported.length} 条`);
         } catch {
           showToast("导入失败");
@@ -1043,11 +1094,11 @@
       if (activeTab === "chart") drawChart();
     });
 
-    window.addEventListener("DOMContentLoaded", () => {
+    window.addEventListener("DOMContentLoaded", async () => {
       $("todayText").textContent = todayString();
-      loadRecords();
       resetForm();
       render();
+      await initAuth();
     });
   </script>
 </body>
