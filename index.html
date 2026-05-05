@@ -23,6 +23,7 @@
     }
 
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
 
     body {
       margin: 0;
@@ -36,7 +37,30 @@
     }
 
     button, input, select, textarea { font: inherit; }
-    button { border: 0; cursor: pointer; transition: 0.16s ease; }
+    button { border: 0; cursor: pointer; transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease, background 0.16s ease; }
+    button:disabled { cursor: not-allowed; opacity: 0.62; transform: none !important; box-shadow: none !important; }
+    .btn:active { transform: translateY(0) scale(0.98); }
+    .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .tab:focus-visible {
+      outline: 3px solid rgba(59,130,246,0.28);
+      outline-offset: 3px;
+    }
+
+    .skip-link {
+      position: fixed;
+      left: 14px;
+      top: 14px;
+      z-index: 999;
+      transform: translateY(-140%);
+      border-radius: 999px;
+      background: #111827;
+      color: #fff;
+      padding: 10px 14px;
+      font-weight: 900;
+      text-decoration: none;
+      transition: 0.16s ease;
+    }
+
+    .skip-link:focus { transform: translateY(0); }
 
     .app {
       width: min(1180px, 100%);
@@ -150,6 +174,7 @@
 
     input, select, textarea {
       width: 100%;
+      min-height: 44px;
       border: 1px solid var(--line);
       outline: none;
       background: rgba(255,255,255,0.9);
@@ -160,6 +185,14 @@
     }
 
     textarea { min-height: 92px; resize: vertical; line-height: 1.6; }
+
+    .field-hint {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+      font-weight: 700;
+    }
 
     input:focus, select:focus, textarea:focus {
       border-color: rgba(59,130,246,0.72);
@@ -215,7 +248,7 @@
       box-shadow: 0 10px 22px rgba(37,99,235,0.23);
     }
 
-    .btn-primary:hover { transform: translateY(-1px); }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-1px); }
 
     .btn-light {
       color: #2d3a52;
@@ -245,6 +278,7 @@
       padding: 14px;
       background: rgba(255,255,255,0.45);
       border-bottom: 1px solid var(--line);
+      overflow-x: auto;
     }
 
     .tab {
@@ -407,6 +441,15 @@
     .toast.show { opacity: 1; bottom: 34px; }
     .hidden { display: none !important; }
 
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
     @media (max-width: 900px) {
       .app { padding: 14px; }
       .hero { align-items: flex-start; flex-direction: column; }
@@ -428,9 +471,370 @@
       .tools { grid-template-columns: 1fr; }
       .stage-row { grid-template-columns: 76px 1fr 44px; }
     }
+
+    /* ===== UI Styling Skill pass: visual polish without changing core features ===== */
+    :root {
+      --surface: rgba(255, 255, 255, 0.78);
+      --surface-strong: rgba(255, 255, 255, 0.94);
+      --surface-soft: rgba(255, 255, 255, 0.56);
+      --ring: rgba(37, 99, 235, 0.16);
+      --brand-weak: #eff6ff;
+      --brand-mid: #dbeafe;
+      --ink-2: #243047;
+      --ink-3: #475569;
+      --danger-weak: #fff1f2;
+      --success-weak: #ecfdf5;
+      --warning-weak: #fffbeb;
+    }
+
+    ::selection { background: rgba(59,130,246,0.22); }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(255,255,255,0.25), rgba(255,255,255,0)),
+        radial-gradient(circle at 18% 18%, rgba(37, 99, 235, 0.12), transparent 28%),
+        radial-gradient(circle at 78% 8%, rgba(20, 184, 166, 0.10), transparent 24%);
+      z-index: -1;
+    }
+
+    .app { padding-top: 18px; }
+
+    .hero {
+      position: relative;
+      padding: 22px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255,255,255,0.78);
+      border-radius: 30px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.86), rgba(255,255,255,0.54)),
+        radial-gradient(circle at top right, rgba(59,130,246,0.14), transparent 34%);
+      box-shadow: var(--soft-shadow);
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: 22px;
+      top: 20px;
+      width: 92px;
+      height: 92px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(37,99,235,0.16), rgba(34,197,94,0.11));
+      filter: blur(6px);
+      z-index: 0;
+    }
+
+    .hero > * { position: relative; z-index: 1; }
+
+    .hero-kicker, .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: var(--blue-2);
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hero-kicker::before, .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--blue), var(--green));
+      box-shadow: 0 0 0 5px rgba(59,130,246,0.10);
+    }
+
+    .hero h1 { color: #0f172a; }
+
+    .hero-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .hero-chips span {
+      border: 1px solid rgba(37, 99, 235, 0.12);
+      background: rgba(239,246,255,0.82);
+      color: #1d4ed8;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .hero-right {
+      padding: 12px;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.86);
+      background: rgba(255,255,255,0.54);
+      box-shadow: 0 8px 20px rgba(39,55,88,0.06);
+    }
+
+    #todayText::before {
+      content: "今日  ";
+      color: #94a3b8;
+      font-weight: 950;
+    }
+
+    .panel, .auth-card {
+      position: relative;
+      background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+      border-color: rgba(255,255,255,0.9);
+    }
+
+    .panel::before, .auth-card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--blue), #14b8a6, var(--green));
+      opacity: 0.82;
+    }
+
+    .panel-inner, .content { padding: 22px; }
+
+    .section-title { margin-bottom: 10px; }
+
+    .form-note {
+      margin-bottom: 18px;
+      padding: 12px 13px;
+      border-radius: 18px;
+      border: 1px solid rgba(37,99,235,0.12);
+      background: linear-gradient(135deg, rgba(239,246,255,0.88), rgba(240,253,250,0.72));
+      color: #475569;
+      font-size: 13px;
+      font-weight: 750;
+      line-height: 1.58;
+    }
+
+    .mini-section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 16px 0 10px;
+      color: #1e293b;
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .mini-section-title::before {
+      content: "";
+      width: 4px;
+      height: 15px;
+      border-radius: 999px;
+      background: var(--blue);
+    }
+
+    label { color: #1f2937; }
+
+    input, select, textarea {
+      background: rgba(255,255,255,0.94);
+      border-color: rgba(15, 23, 42, 0.10);
+    }
+
+    input:hover, select:hover, textarea:hover { border-color: rgba(37, 99, 235, 0.28); }
+
+    input::placeholder, textarea::placeholder { color: #9aa6b6; }
+
+    .score-card {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.86));
+      border-color: rgba(37,99,235,0.10);
+      box-shadow: 0 8px 18px rgba(39,55,88,0.05);
+    }
+
+    .score-card:focus-within {
+      border-color: rgba(37,99,235,0.38);
+      box-shadow: 0 0 0 4px var(--ring), 0 12px 24px rgba(37,99,235,0.08);
+    }
+
+    .btn { letter-spacing: -0.01em; }
+
+    .btn-light:hover:not(:disabled) {
+      background: #fff;
+      box-shadow: 0 8px 18px rgba(39,55,88,0.08);
+      transform: translateY(-1px);
+    }
+
+    .btn-danger {
+      background: var(--danger-weak);
+      border: 1px solid rgba(239,68,68,0.14);
+    }
+
+    .btn-green {
+      background: var(--success-weak);
+      border: 1px solid rgba(34,197,94,0.14);
+    }
+
+    .tools {
+      background: linear-gradient(180deg, rgba(255,255,255,0.42), rgba(248,250,252,0.62));
+    }
+
+    .content-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-end;
+      margin-bottom: 16px;
+    }
+
+    .content-head h2 {
+      margin: 0;
+      color: #0f172a;
+      font-size: 22px;
+      letter-spacing: -0.03em;
+    }
+
+    .content-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 750;
+      line-height: 1.5;
+      max-width: 320px;
+      text-align: right;
+    }
+
+    .topbar {
+      gap: 8px;
+      padding: 12px;
+      background: rgba(248,250,252,0.72);
+    }
+
+    .tab {
+      min-height: 44px;
+      border: 1px solid transparent;
+      color: #64748b;
+    }
+
+    .tab:hover { background: rgba(255,255,255,0.62); }
+
+    .tab.active {
+      border-color: rgba(37,99,235,0.14);
+      box-shadow: 0 12px 24px rgba(37,99,235,0.10);
+    }
+
+    .stats { gap: 10px; }
+
+    .stat {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.88));
+    }
+
+    .stat::after {
+      content: "";
+      position: absolute;
+      right: -18px;
+      top: -18px;
+      width: 58px;
+      height: 58px;
+      border-radius: 999px;
+      background: rgba(59,130,246,0.08);
+    }
+
+    .stat-num { color: #0f172a; }
+    .stat-name { color: #64748b; }
+
+    .filters, .chart-controls, .stage-manager-row {
+      padding: 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(15,23,42,0.07);
+      background: rgba(248,250,252,0.72);
+    }
+
+    .record, .insight-card, .stage-card, .chart-card {
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+    }
+
+    .record:hover, .insight-card:hover, .stage-card:hover {
+      transform: translateY(-1px);
+      border-color: rgba(37,99,235,0.16);
+      box-shadow: 0 14px 30px rgba(39,55,88,0.09);
+    }
+
+    .record-text, .insight-text {
+      line-height: 1.72;
+      color: #334155;
+    }
+
+    .record-text strong {
+      display: inline-flex;
+      margin-right: 2px;
+      color: #0f172a;
+    }
+
+    .badge { border: 1px solid rgba(15,23,42,0.06); }
+    .stage-badge { background: var(--brand-mid); }
+    .good { background: var(--success-weak); }
+    .mid { background: var(--warning-weak); }
+    .low { background: var(--danger-weak); }
+
+    .empty {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.72), rgba(248,250,252,0.72));
+      border-style: solid;
+    }
+
+    .empty::before {
+      content: "";
+      display: block;
+      width: 36px;
+      height: 36px;
+      margin: 0 auto 12px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(59,130,246,0.18), rgba(34,197,94,0.14));
+      box-shadow: inset 0 0 0 1px rgba(37,99,235,0.12);
+    }
+
+    .chart-card h3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chart-card h3::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--blue);
+    }
+
+    .bar { background: #e2e8f0; }
+    .bar span { background: linear-gradient(90deg, #60a5fa, #2563eb); }
+
+    @media (max-width: 900px) {
+      .hero { padding: 18px; }
+      .content-head { align-items: flex-start; flex-direction: column; }
+      .content-head p { text-align: left; max-width: none; }
+    }
+
+    @media (max-width: 520px) {
+      .hero { border-radius: 24px; }
+      .hero-chips { gap: 6px; }
+      .hero-chips span { font-size: 11px; padding: 5px 9px; }
+      .panel-inner, .content { padding: 15px; }
+      .filters, .chart-controls, .stage-manager-row { padding: 10px; }
+      .record, .insight-card, .stage-card { padding: 14px; }
+      .content-head h2 { font-size: 20px; }
+    }
+
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#mainView">跳到主内容</a>
   <section id="authView" class="auth-wrap hidden">
     <div class="auth-card">
       <h1>状态日记</h1>
@@ -444,8 +848,8 @@
         <input id="authPassword" type="password" placeholder="至少 6 位" autocomplete="current-password" />
       </div>
       <div class="actions">
-        <button class="btn btn-primary" onclick="signIn()">登录</button>
-        <button class="btn btn-light" onclick="signUp()">注册</button>
+        <button class="btn btn-primary" id="authSignInButton" onclick="signIn()">登录</button>
+        <button class="btn btn-light" id="authSignUpButton" onclick="signUp()">注册</button>
       </div>
     </div>
   </section>
@@ -453,13 +857,19 @@
   <main id="mainView" class="app hidden">
     <header class="hero">
       <div>
+        <div class="hero-kicker">Personal State OS</div>
         <h1>状态日记</h1>
         <p>每日记录状态阶段、动力、脑力和复盘。</p>
+        <div class="hero-chips" aria-label="核心功能">
+          <span>云端同步</span>
+          <span>阶段追踪</span>
+          <span>趋势复盘</span>
+        </div>
       </div>
       <div class="hero-right">
         <div id="todayText"></div>
         <div class="user-pill" id="userEmail"></div>
-        <button class="btn btn-light" style="min-height:34px; padding:7px 12px; border-radius:999px;" onclick="signOut()">退出登录</button>
+        <button class="btn btn-light" id="signOutButton" style="min-height:34px; padding:7px 12px; border-radius:999px;" onclick="signOut()">退出登录</button>
       </div>
     </header>
 
@@ -470,6 +880,7 @@
             <h2 id="formTitle">记录今天</h2>
             <span class="tag" id="modeTag">新增</span>
           </div>
+          <div class="form-note">先选阶段，再填三项分数，最后用简记和感悟留下复盘线索。原有保存、编辑、同步逻辑保持不变。</div>
 
           <form id="recordForm">
             <div class="field">
@@ -482,21 +893,25 @@
               <select id="stage" required></select>
             </div>
 
+            <div class="mini-section-title">状态评分</div>
             <div class="score-grid">
               <div class="score-card">
                 <label for="outerScore">外状态</label>
-                <input id="outerScore" type="number" min="0" max="100" step="1" placeholder="0" required />
+                <input id="outerScore" type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="0" required />
               </div>
               <div class="score-card">
                 <label for="innerScore">内状态</label>
-                <input id="innerScore" type="number" min="0" max="100" step="1" placeholder="0" required />
+                <input id="innerScore" type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="0" required />
               </div>
               <div class="score-card">
                 <label for="finalScore">最终评分</label>
-                <input id="finalScore" type="number" min="0" max="100" step="1" placeholder="0" required />
+                <input id="finalScore" type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="0" required />
               </div>
             </div>
 
+            <div class="field-hint">分数范围 0-100；60 可视为阶段合格线，后续趋势图会自动排除三项全为 0 的占位记录。</div>
+
+            <div class="mini-section-title">复盘文字</div>
             <div class="field" style="margin-top: 14px;">
               <label for="summary">今日简记</label>
               <textarea id="summary" placeholder="今天的大致事件、不足、睡眠、学习情况等。"></textarea>
@@ -523,14 +938,21 @@
       </section>
 
       <section class="panel">
-        <div class="topbar">
-          <button class="tab active" data-tab="records" onclick="switchTab('records')">记录</button>
-          <button class="tab" data-tab="chart" onclick="switchTab('chart')">趋势</button>
-          <button class="tab" data-tab="insights" onclick="switchTab('insights')">感悟</button>
-          <button class="tab" data-tab="stages" onclick="switchTab('stages')">阶段</button>
+        <div class="topbar" role="tablist" aria-label="状态日记视图切换">
+          <button class="tab active" data-tab="records" role="tab" aria-selected="true" onclick="switchTab('records')">记录</button>
+          <button class="tab" data-tab="chart" role="tab" aria-selected="false" onclick="switchTab('chart')">趋势</button>
+          <button class="tab" data-tab="insights" role="tab" aria-selected="false" onclick="switchTab('insights')">感悟</button>
+          <button class="tab" data-tab="stages" role="tab" aria-selected="false" onclick="switchTab('stages')">阶段</button>
         </div>
 
         <div class="content">
+          <div class="content-head">
+            <div>
+              <div class="eyebrow">Dashboard</div>
+              <h2>状态总览</h2>
+            </div>
+            <p>在这里查看记录、趋势、感悟和阶段设置。</p>
+          </div>
           <div class="stats" id="stats"></div>
 
           <div id="recordsPanel">
@@ -592,7 +1014,7 @@
     </div>
   </main>
 
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
     const SUPABASE_URL = "https://xzzyndryhfdubbrozrfd.supabase.co";
@@ -610,6 +1032,26 @@
     let currentUser = null;
 
     const $ = (id) => document.getElementById(id);
+
+    function setButtonBusy(buttonOrId, busy, busyText = "处理中...") {
+      const btn = typeof buttonOrId === "string" ? $(buttonOrId) : buttonOrId;
+      if (!btn) return;
+      if (busy) {
+        btn.dataset.originalText = btn.textContent;
+        btn.dataset.busyText = busyText;
+        btn.disabled = true;
+        btn.setAttribute("aria-busy", "true");
+        btn.textContent = busyText;
+      } else {
+        btn.disabled = false;
+        btn.removeAttribute("aria-busy");
+        if (btn.textContent === btn.dataset.busyText && btn.dataset.originalText) {
+          btn.textContent = btn.dataset.originalText;
+        }
+        delete btn.dataset.originalText;
+        delete btn.dataset.busyText;
+      }
+    }
 
     function todayString() {
       const now = new Date();
@@ -668,27 +1110,44 @@
       if (!email || !password) return showToast("请输入邮箱和密码");
       if (password.length < 6) return showToast("密码至少 6 位");
 
-      const { error } = await supabaseClient.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: window.location.href }
-      });
-      if (error) return showToast(error.message);
-      showToast("注册成功。若需要验证邮箱，请先去邮箱点击确认链接");
+      setButtonBusy("authSignUpButton", true, "注册中...");
+      try {
+        const { error } = await supabaseClient.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: window.location.href }
+        });
+        if (error) return showToast(error.message);
+        showToast("注册成功。若需要验证邮箱，请先去邮箱点击确认链接");
+      } finally {
+        setButtonBusy("authSignUpButton", false);
+      }
     }
 
     async function signIn() {
       const email = $("authEmail").value.trim();
       const password = $("authPassword").value;
       if (!email || !password) return showToast("请输入邮箱和密码");
-      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      if (error) return showToast(error.message);
-      showToast("已登录");
+
+      setButtonBusy("authSignInButton", true, "登录中...");
+      try {
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) return showToast(error.message);
+        showToast("已登录");
+      } finally {
+        setButtonBusy("authSignInButton", false);
+      }
     }
 
     async function signOut() {
-      await supabaseClient.auth.signOut();
-      showToast("已退出");
+      setButtonBusy("signOutButton", true, "退出中...");
+      try {
+        const { error } = await supabaseClient.auth.signOut();
+        if (error) return showToast("退出失败：" + error.message);
+        showToast("已退出");
+      } finally {
+        setButtonBusy("signOutButton", false);
+      }
     }
 
     function toScore(value) {
@@ -858,25 +1317,31 @@
       const record = getFormData();
       if (!record.date) return showToast("请填写日期");
 
-      await ensureStagesExist([record.stage]);
+      setButtonBusy("saveBtn", true, editingDate ? "修改中..." : "保存中...");
+      try {
+        await ensureStagesExist([record.stage]);
 
-      if (editingDate && editingDate !== record.date) {
-        const { error: deleteError } = await supabaseClient
+        if (editingDate && editingDate !== record.date) {
+          const { error: deleteError } = await supabaseClient
+            .from("state_records")
+            .delete()
+            .eq("user_id", currentUser.id)
+            .eq("date", editingDate);
+          if (deleteError) return showToast("修改日期失败：" + deleteError.message);
+        }
+
+        const { error } = await supabaseClient
           .from("state_records")
-          .delete()
-          .eq("date", editingDate);
-        if (deleteError) return showToast("修改日期失败：" + deleteError.message);
+          .upsert(toDb(record), { onConflict: "user_id,date" });
+
+        if (error) return showToast("保存失败：" + error.message);
+        await loadStages();
+        await loadCloudRecords(false);
+        resetForm();
+        showToast("已保存并自动同步");
+      } finally {
+        setButtonBusy("saveBtn", false);
       }
-
-      const { error } = await supabaseClient
-        .from("state_records")
-        .upsert(toDb(record), { onConflict: "user_id,date" });
-
-      if (error) return showToast("保存失败：" + error.message);
-      await loadStages();
-      await loadCloudRecords(false);
-      resetForm();
-      showToast("已保存并自动同步");
     });
 
     function editRecord(date) {
@@ -914,6 +1379,7 @@
       const { error } = await supabaseClient
         .from("state_records")
         .delete()
+        .eq("user_id", currentUser.id)
         .eq("date", date);
       if (error) return showToast("删除失败：" + error.message);
       await loadCloudRecords(false);
@@ -959,6 +1425,7 @@
       const { error } = await supabaseClient
         .from("user_stages")
         .delete()
+        .eq("user_id", currentUser.id)
         .eq("id", stageId);
       if (error) return showToast("删除阶段失败：" + error.message);
       await loadStages();
@@ -1161,18 +1628,33 @@
               <div class="badges"><span class="badge">可选阶段</span></div>
             </div>
             <div class="stage-actions">
-              <button class="btn btn-danger" onclick="deleteStage('${stage.id}', '${escapeHTML(stage.name).replace(/'/g, "\\'")}')">删除阶段</button>
+              <button class="btn btn-danger" onclick="deleteStage('${stage.id}', decodeURIComponent('${encodeURIComponent(stage.name)}'))">删除阶段</button>
             </div>
           </article>
         `;
       }).join("");
     }
 
+    function prepareChartCanvas(canvas) {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const cssWidth = Math.max(320, Math.round(rect.width || canvas.clientWidth || 900));
+      const cssHeight = Math.max(260, Math.round(rect.height || 320));
+      const targetWidth = Math.round(cssWidth * dpr);
+      const targetHeight = Math.round(cssHeight * dpr);
+      if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+      }
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { ctx, w: cssWidth, h: cssHeight };
+    }
+
     function drawChart() {
       const canvas = $("scoreChart");
-      const ctx = canvas.getContext("2d");
+      const { ctx, w, h } = prepareChartCanvas(canvas);
       const list = chartRecords();
-      const w = canvas.width, h = canvas.height;
       const pad = 42;
 
       ctx.clearRect(0, 0, w, h);
@@ -1281,7 +1763,11 @@
 
     function switchTab(tab) {
       activeTab = tab;
-      document.querySelectorAll(".tab").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === tab));
+      document.querySelectorAll(".tab").forEach(btn => {
+        const selected = btn.dataset.tab === tab;
+        btn.classList.toggle("active", selected);
+        btn.setAttribute("aria-selected", selected ? "true" : "false");
+      });
       $("recordsPanel").style.display = tab === "records" ? "block" : "none";
       $("chartPanel").style.display = tab === "chart" ? "block" : "none";
       $("insightsPanel").style.display = tab === "insights" ? "block" : "none";
